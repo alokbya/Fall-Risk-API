@@ -1,0 +1,26 @@
+{
+  "name": "new-falls-api",
+  "version": "1.0.0",
+  "description": "Fall risk API",
+  "main": "server.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alokbya/fall-risk.git"
+  },
+  "author": "Alaaddin Hiefield",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alokbya/fall-risk/issues"
+  },
+  "homepage": "https://github.com/alokbya/fall-risk#readme",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "mongoose": "^6.2.9",
+    "nodemon": "^2.0.15"
+  }
+}
