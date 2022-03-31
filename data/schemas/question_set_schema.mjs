@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+/****************************
+    * Question Set Schema
+****************************/
 const QuestionSetSchema = new mongoose.Schema({
     name                            : { type: String, required: true },
     room                            : { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
