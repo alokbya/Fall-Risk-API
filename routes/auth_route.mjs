@@ -1,12 +1,13 @@
 import { application } from "express";
 import * as users from '../models/users_model.mjs';
 import * as blacklist from '../models/blacklist_model.mjs';
+import * as orgs_model from '../models/orgs_model.mjs';
 import express from 'express';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import { destroyToken } from '../auth/auth_helpers.mjs';
+import { destroyToken, verifyToken } from '../auth/auth_helpers.mjs';
 
 dotenv.config();
 
@@ -14,6 +15,9 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
     try {
+        // const decoder = new TextDecoder();
+        // const decoded_body = decoder.decode(...req.body);
+
         const {first_name, last_name, email, title, password } = req.body;
 
         // validate user input (400)
@@ -30,19 +34,28 @@ router.post('/register', async (req, res) => {
         // encrypt password (hash & salt password)
         const e_pass = await bcrypt.hash(password, 10);
         
+        // get today's date
+        const date = new Date();
+        const today = `${date.getUTCMonth()}-${date.getUTCDay()}-${date.getUTCFullYear}`;
+        const mongo_date = new Date(`${date.getUTCFullYear}-${date.getUTCMonth}-${date.getUTCDay}`);
         // create new user
-        const user = await users.AddUser({ first_name, last_name, email, title, password: e_pass });
-        const user_client = {
-            first_name: first_name,
-            last_name: last_name,
-            email: email,
-            title: title,
-            units: user.units,
-        };
+        let user = await users.AddUser({ first_name, last_name, email, title, password: e_pass, dateCreated: date });
 
+
+        // create user's org
+        const org = await orgs_model.AddOrg({
+            name: `${first_name}'s org`,
+            dateCreated: date,
+            admins: [user._id],
+            owner: user._id,
+        });
+
+        // update user with new org
+        user = await users.UpdateUser({ _id: user._id }, {orgs: [...user.orgs, org] }, { new: true })
+        
         // create signed token
         const token = jwt.sign(
-            { user_id: user._id, email, first_name, last_name, title, units: user.units },
+            { user_id: user._id, email, first_name, last_name, title, units: user.units, orgs: user.orgs },
             process.env.TOKEN_KEY,
             {
                 expiresIn: '1h',
@@ -52,7 +65,15 @@ router.post('/register', async (req, res) => {
         user.token = token;
 
         // set token cookie (JWT)
-        res.cookie('session', token).status(201).json(user_client);
+        // res.set({'Session-Token': token});  // header
+        res.cookie('session', token, { httpOnly: false }).status(201).json({
+            first_name: first_name,
+            last_name: last_name,
+            email: email,
+            title: title,
+            units: user.units,
+            orgs: org,
+        });
 
     } catch (error) {
         console.error(error);
@@ -67,27 +88,26 @@ router.post('/login', async (req, res) => {
         // validate user input
         if (!(email && password)) {
             res.status(400).json({ Error: 'All inputs are required' });
+            return;
         }
 
         // validate user exists
         const user = await users.GetUser({ email });
         if (user.length === 0) {
             res.status(401).json({ Error: 'Invalid username or password' });
+            return;
         }
 
         const parsed_user = JSON.parse(JSON.stringify(user))[0];
-        const user_client = {
-            first_name: parsed_user.first_name,
-            last_name: parsed_user.last_name,
-            email: parsed_user.email,
-            title: parsed_user.title,
-            units: parsed_user.units,
-        };
+        const orgs = await orgs_model.GetOrg({ user: user._id });
+
+        const parsed_orgs = 
+        JSON.parse(JSON.stringify(orgs))[0];
 
         if (user && await bcrypt.compare(password, parsed_user.password)) {
             // create token
             const token = jwt.sign(
-                { user_id: parsed_user._id, email: parsed_user.email, first_name: parsed_user.first_name, last_name: parsed_user.last_name, title: parsed_user.title, units: parsed_user.units },
+                { user_id: parsed_user._id, email: parsed_user.email, first_name: parsed_user.first_name, last_name: parsed_user.last_name, title: parsed_user.title, units: parsed_user.units, orgs: parsed_orgs },
                 process.env.TOKEN_KEY,
                 {
                     expiresIn: '1h',
@@ -98,7 +118,15 @@ router.post('/login', async (req, res) => {
             user.token = token;
             
             // set token cookie (JWT)
-            res.cookie('session', token).status(200).json(user_client);
+            // res.set({'Session-Token': token});  // header
+            res.cookie('session', token, { httpOnly: false }).status(200).json({
+                first_name: parsed_user.first_name,
+                last_name: parsed_user.last_name,
+                email: parsed_user.email,
+                title: parsed_user.title,
+                units: parsed_user.units,
+                orgs: parsed_orgs,
+            });
         } else {
             res.status(401).json({ Error: 'User not found' });
         }
@@ -123,6 +151,15 @@ router.post('/logout', destroyToken, async (req, res) => {
             .catch(error => {
                 res.status(500).json({ Error: `${error}`});
             })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ Error: `${error}`});
+    }
+});
+
+router.get('/refresh', verifyToken, async (req, res) => {
+    try {
+        res.status(200).json(req.user);
     } catch (error) {
         console.error(error);
         res.status(500).json({ Error: `${error}`});

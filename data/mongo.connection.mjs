@@ -9,6 +9,7 @@ import RoomsSchema from './schemas/rooms_schema.mjs';
 import UnitsSchema from './schemas/units_schema.mjs';
 import UsersSchema from './schemas/users_schema.mjs';
 import BlacklistSchema from './schemas/blacklist_schema.mjs';
+import OrgsSchema from './schemas/orgs_schema.mjs';
 
 /*********************
     * Configure DB
@@ -32,10 +33,11 @@ db.once('open', () => {
 /***********************
     * Generate models
 ***********************/
-const QuestionSet = mongoose.model("QuestionSet", QuestionSetSchema);
-const Room = mongoose.model("Room", RoomsSchema);
-const Unit = mongoose.model("Unit", UnitsSchema);
-const User = mongoose.model("User", UsersSchema);
-const Blacklist = mongoose.model("Blacklist", BlacklistSchema);
+const QuestionSet = mongoose.model('QuestionSet', QuestionSetSchema);
+const Room = mongoose.model('Room', RoomsSchema);
+const Unit = mongoose.model('Unit', UnitsSchema);
+const User = mongoose.model('User', UsersSchema);
+const Blacklist = mongoose.model('Blacklist', BlacklistSchema);
+const Org = mongoose.model('Org', OrgsSchema);
 
-export { QuestionSet, Room, Unit, User, Blacklist };
+export { QuestionSet, Room, Unit, User, Blacklist, Org };

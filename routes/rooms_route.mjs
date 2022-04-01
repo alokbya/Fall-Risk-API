@@ -9,7 +9,7 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-    res.status(200).json({ Action: 'GET' });
+    res.status(200).json({ Action: 'HELLO FROM DENVER' });
 });
 
 router.put('/', async (req, res) => {

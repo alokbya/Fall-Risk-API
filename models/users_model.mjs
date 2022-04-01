@@ -7,8 +7,7 @@ const AddUser = async (user_obj) => {
 
 const GetUser = async (filter, projection, limit) => {
     const query = User.find();
-    if (Object.keys(filter).length > 0)
-    {
+    if (Object.keys(filter).length > 0) {
         query.and(filter);
     }
     return query.exec();
