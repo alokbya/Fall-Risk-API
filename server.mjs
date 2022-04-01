@@ -8,6 +8,7 @@ import { router as units_route } from './routes/units_route.mjs';
 import { router as users_route } from './routes/users_route.mjs';
 import { router as auth_route } from './routes/auth_route.mjs';
 import { router as orgs_route } from './routes/orgs_route.mjs';
+import { router as ref_router } from './routes/refresh_route.mjs';
 
 const app = express();
 const PORT = 3001;
@@ -39,6 +40,7 @@ app.use('/units', units_route);
 app.use('/users', users_route);
 app.use('/auth', auth_route);
 app.use('/orgs', orgs_route);
+app.use('/refresh', ref_router);
 
 
 app.listen(PORT, () => {
