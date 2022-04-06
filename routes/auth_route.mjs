@@ -15,8 +15,6 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
     try {
-        // const decoder = new TextDecoder();
-        // const decoded_body = decoder.decode(...req.body);
 
         const {first_name, last_name, email, title, password } = req.body;
 
