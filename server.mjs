@@ -8,7 +8,9 @@ import { router as units_route } from './routes/units_route.mjs';
 import { router as users_route } from './routes/users_route.mjs';
 import { router as auth_route } from './routes/auth_route.mjs';
 import { router as orgs_route } from './routes/orgs_route.mjs';
-import { router as ref_router } from './routes/refresh_route.mjs';
+import { router as ref_route } from './routes/refresh_route.mjs';
+import { router as epic_audit_route } from './routes/epic_audit_route.mjs';
+import { router as room_audit_route } from './routes/room_audit_route.mjs';
 
 const app = express();
 const PORT = 3001;
@@ -24,23 +26,26 @@ app.use(cors({
     "origin": 'http://localhost:3000',
     "methods": ['GET','HEAD','PUT','PATCH','POST','DELETE'],
     "preflightContinue": false,
-    "optionsSuccessStatus": 204
+    "optionsSuccessStatus": 204,
+    "allowedHeaders": ['Content-Type', 'Session-Token', 'Session']
 }));
 // app.use(function(req, res, next) {
 //     res.header('Access-Control-Allow-Origin', 'http://localhost:3000')
 //     res.header('Access-Control-Allow-Credentials','true');
-//     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, HEAD, PATCH, DELETE, OPTIONS')
 //     res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept')
 //     next();
 //   });
 
-app.use('/questions', qs_route);
+// app.use('/questions', qs_route);
 app.use('/rooms', rooms_route);
 app.use('/units', units_route);
 app.use('/users', users_route);
 app.use('/auth', auth_route);
 app.use('/orgs', orgs_route);
-app.use('/refresh', ref_router);
+app.use('/refresh', ref_route);
+app.use('/epic-audits', epic_audit_route);
+app.use('/room-audit', room_audit_route);
 
 
 app.listen(PORT, () => {

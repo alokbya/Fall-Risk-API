@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import { destroyToken, verifyToken } from '../auth/auth_helpers.mjs';
+import { destroyToken, verifyToken, encryptPassword, generateToken } from '../auth/auth_helpers.mjs';
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
     try {
 
-        const {first_name, last_name, email, title, password } = req.body;
+        const {first_name, last_name, email, title, password, org_id } = req.body;
 
         // validate user input (400)
         if (!(first_name && last_name && email && password)) {
@@ -30,35 +30,46 @@ router.post('/register', async (req, res) => {
         }
 
         // encrypt password (hash & salt password)
-        const e_pass = await bcrypt.hash(password, 10);
+        const e_pass = await encryptPassword(password);
         
         // get today's date
         const date = new Date();
-        const today = `${date.getUTCMonth()}-${date.getUTCDay()}-${date.getUTCFullYear}`;
-        const mongo_date = new Date(`${date.getUTCFullYear}-${date.getUTCMonth}-${date.getUTCDay}`);
         // create new user
         let user = await users.AddUser({ first_name, last_name, email, title, password: e_pass, dateCreated: date });
 
-
         // create user's org
-        const org = await orgs_model.AddOrg({
-            name: `${first_name}'s org`,
-            dateCreated: date,
-            admins: [user._id],
-            owner: user._id,
-        });
+        // const org = await orgs_model.AddOrg({
+        //     name: `${first_name}'s org`,
+        //     dateCreated: date,
+        //     admins: [user._id],
+        //     owner: user._id, // add users prop
+        // });
+
+        // const userOrgs = [...user.orgs, org];
+        const userOrgs = [...user.orgs];
+
+        let joinOrg = await orgs_model.GetOrg({ _id: org_id });
+        if (joinOrg.length > 0) {
+            joinOrg = JSON.parse(JSON.stringify(joinOrg))[0]
+            orgs_model.UpdateOrg({ _id: org_id}, { users: [...joinOrg.users, user]}, { new: true });
+            userOrgs.push(joinOrg);
+        }
 
         // update user with new org
-        user = await users.UpdateUser({ _id: user._id }, {orgs: [...user.orgs, org] }, { new: true })
+        user = await users.UpdateUser({ _id: user._id }, {orgs: userOrgs }, { new: true })
         
         // create signed token
-        const token = jwt.sign(
-            { user_id: user._id, email, first_name, last_name, title, units: user.units, orgs: user.orgs },
-            process.env.TOKEN_KEY,
-            {
-                expiresIn: '1h',
+        const token = generateToken({
+            user: {
+                _id: user._id,
+                units: user.units,
+                orgs: user.orgs,
             },
-        );
+            email: email,
+            title: title,
+            first_name: first_name,
+            last_name: last_name,
+        });
 
         user.token = token;
 
@@ -70,7 +81,7 @@ router.post('/register', async (req, res) => {
             email: email,
             title: title,
             units: user.units,
-            orgs: org,
+            orgs: user.orgs,
         });
 
     } catch (error) {

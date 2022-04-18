@@ -10,6 +10,8 @@ import UnitsSchema from './schemas/units_schema.mjs';
 import UsersSchema from './schemas/users_schema.mjs';
 import BlacklistSchema from './schemas/blacklist_schema.mjs';
 import OrgsSchema from './schemas/orgs_schema.mjs';
+import EpicAuditSchema from './schemas/epic_audit_schema.mjs';
+import RoomAuditSchema from './schemas/room_audit_schema.mjs';
 
 /*********************
     * Configure DB
@@ -39,5 +41,7 @@ const Unit = mongoose.model('Unit', UnitsSchema);
 const User = mongoose.model('User', UsersSchema);
 const Blacklist = mongoose.model('Blacklist', BlacklistSchema);
 const Org = mongoose.model('Org', OrgsSchema);
+const EpicAudit = mongoose.model('EpicAudit', EpicAuditSchema);
+const RoomAudit = mongoose.model('RoomAudit', RoomAuditSchema);
 
-export { QuestionSet, Room, Unit, User, Blacklist, Org };
+export { QuestionSet, Room, Unit, User, Blacklist, Org, EpicAudit, RoomAudit };

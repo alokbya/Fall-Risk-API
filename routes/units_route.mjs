@@ -5,11 +5,17 @@ import { verifyToken } from "../auth/auth_helpers.mjs";
 
 const router = express.Router();
 
-router.use(verifyToken);
+// router.use(verifyToken);
 
 router.post('/', async (req, res) => {
-    const org = req.user.orgs;
-    await units.AddUnit({name: req.body.name, org: org, dateCreated: new Date()})
+    let newOrg = {
+        name: req.body.name,
+        org: req.user !== undefined ? req.user.orgs : req.body.org,
+        dateCreated: new Date()
+    };
+    // newOrg[org] = req.user !== undefined ? req.user.orgs : req.body.org;
+    // {name: req.body.name, org: org, dateCreated: new Date()}
+    await units.AddUnit(newOrg)
         .then(unit => {
             res.status(201).json(unit);
         })
@@ -20,8 +26,10 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-    const org = req.user.orgs;
-    await units.GetUnit({org: org._id})
+    const filter = {};
+    if ( req.user !== undefined ) filter[org] = req.user.orgs._id;
+
+    await units.GetUnit(filter)
         .then(unit => {
             res.status(200).json(unit);
         })

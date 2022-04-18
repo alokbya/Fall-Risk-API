@@ -10,8 +10,9 @@ import mongoose from "mongoose";
 const OrgsSchema = new mongoose.Schema({
     name        : { type: String, required: true },
     dateCreated : { type: Date, required: true },
-    admins      : { type: [mongoose.Schema.Types.ObjectId], ref: 'User', required: true },
-    owner       : { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    admins      : { type: [mongoose.Schema.Types.ObjectId], ref: 'User' },
+    owner       : { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    users       : { type: [mongoose.Schema.Types.ObjectId], ref: 'User'}
 });
 
 export default OrgsSchema;

@@ -16,7 +16,7 @@ const GetQuestionSet = async (filter, projection, limit) => {
 const GetQuestionSetByRoomId = async (room_id) => {
     const query = QuestionSet.find();
     query.and({room: room_id});
-    query.exec();
+    return query.exec();
 };
 
 const UpdateQuestionSet = async (condition, update, options) => {
