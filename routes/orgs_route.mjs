@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
 router.get('/', verifyToken, async (req, res) => {
     try{
         const user = req.user.user_id;
-        await orgs.GetOrg({ users: [user] })
+        await orgs.GetOrg({ users: { $in: [user] }})
         .then(org => {
             res.status(200).json(org);
         })

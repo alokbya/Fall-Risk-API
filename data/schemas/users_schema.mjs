@@ -12,6 +12,7 @@ const UsersSchema = new mongoose.Schema({
     password    : { type: String, required: true },
     token       : { type: String, requried: true },
     orgs        : { type: [mongoose.Schema.Types.ObjectId], ref: 'Org', required: false},
+    units       : { type: [mongoose.Schema.Types.ObjectId], ref: 'Unit'},
     dateCreated : { type : Date, required: true }
 });
 

@@ -2,12 +2,14 @@ import { application } from "express";
 import * as users from '../models/users_model.mjs';
 import * as blacklist from '../models/blacklist_model.mjs';
 import * as orgs_model from '../models/orgs_model.mjs';
+import * as units from '../models/units_model.mjs';
 import express from 'express';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import { destroyToken, verifyToken, encryptPassword, generateToken } from '../auth/auth_helpers.mjs';
+import {ObjectId} from 'mongodb';
 
 dotenv.config();
 
@@ -18,9 +20,17 @@ router.post('/register', async (req, res) => {
 
         const {first_name, last_name, email, title, password, org_id } = req.body;
 
+        if (!ObjectId.isValid(org_id)) {
+            return res.status(406).json({ Error: 'Invalid Organization ID'});
+        }
+        let joinOrg = await orgs_model.GetOrg({ _id: org_id });
+        if (joinOrg.length === 0) {
+            return res.status(400).json({ Error: 'Organization not found'});
+        }
+        
         // validate user input (400)
         if (!(first_name && last_name && email && password)) {
-            req.status(400).json({ Error: 'All inputs are required' });
+            res.status(400).json({ Error: 'All inputs are required' });
         }
 
         // check if user exists (409)
@@ -48,7 +58,7 @@ router.post('/register', async (req, res) => {
         // const userOrgs = [...user.orgs, org];
         const userOrgs = [...user.orgs];
 
-        let joinOrg = await orgs_model.GetOrg({ _id: org_id });
+
         if (joinOrg.length > 0) {
             joinOrg = JSON.parse(JSON.stringify(joinOrg))[0]
             orgs_model.UpdateOrg({ _id: org_id}, { users: [...joinOrg.users, user]}, { new: true });
@@ -76,12 +86,13 @@ router.post('/register', async (req, res) => {
         // set token cookie (JWT)
         // res.set({'Session-Token': token});  // header
         res.cookie('session', token, { httpOnly: false }).status(201).json({
+            user_id: user._id,
             first_name: first_name,
             last_name: last_name,
             email: email,
             title: title,
             units: user.units,
-            orgs: user.orgs,
+            orgs: joinOrg,
         });
 
     } catch (error) {
@@ -109,9 +120,8 @@ router.post('/login', async (req, res) => {
 
         const parsed_user = JSON.parse(JSON.stringify(user))[0];
         const orgs = await orgs_model.GetOrg({ user: user._id });
-
-        const parsed_orgs = 
-        JSON.parse(JSON.stringify(orgs))[0];
+        // const units = await units.GetUnit({ _id: { $in: parsed_user.units }});
+        const parsed_orgs = JSON.parse(JSON.stringify(orgs))[0];
 
         if (user && await bcrypt.compare(password, parsed_user.password)) {
             // create token
@@ -129,6 +139,7 @@ router.post('/login', async (req, res) => {
             // set token cookie (JWT)
             // res.set({'Session-Token': token});  // header
             res.cookie('session', token, { httpOnly: false }).status(200).json({
+                user_id: parsed_user._id,
                 first_name: parsed_user.first_name,
                 last_name: parsed_user.last_name,
                 email: parsed_user.email,
