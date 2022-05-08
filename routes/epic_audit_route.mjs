@@ -6,8 +6,21 @@ const router = express.Router();
 
 router.use(verifyToken);
 
+// Create a new Epic Audit
 router.post('/', async (req, res) => {
-    res.status(201).json({ Action: 'POST' });
+    const payload = req.body.payload;
+    const unit = req.body.unit.unit._id;
+    const user = req.user.user_id;
+    const dateAdded = new Date();
+    const epicAudit = { unit, payload, dateAdded, user }
+    epicAudits.AddEpicAudit(epicAudit)
+    .then(audit => {
+        res.status(201).json(audit);
+    })
+    .catch(error => {
+        console.error(`${error}`);
+        res.status(500).json({ Error: `${error}` });
+    });
 });
 
 router.get('/', async (req, res) => {

@@ -44,7 +44,7 @@ app.use('/users', users_route);
 app.use('/auth', auth_route);
 app.use('/orgs', orgs_route);
 app.use('/refresh', ref_route);
-app.use('/epic-audits', epic_audit_route);
+app.use('/epic-audit', epic_audit_route);
 app.use('/room-audit', room_audit_route);
 
 
